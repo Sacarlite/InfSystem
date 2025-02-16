@@ -20,7 +20,7 @@ const SubstancesTable = () => {
   const [selectedType, setSelectedType] = useState(''); // Состояние для выбранного типа вещества
   const [typeFilterEnabled, setTypeFilterEnabled] = useState(false); // Состояние для чекбокса типа вещества
   const [errorMessage, setErrorMessage] = useState(''); // Для ошибок
-
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' }); // Добавляем конфиг для сортировки
   useEffect(() => {
     const fetchSubstancesAndTypes = async () => {
       try {
@@ -55,6 +55,26 @@ const SubstancesTable = () => {
     filterData(query, minDensity, maxDensity, minCalorificValue, maxCalorificValue, selectedType);
   };
 
+  // Функция для сортировки
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+
+    const sortedData = [...filteredSubstances].sort((a, b) => {
+      if (a[key] < b[key]) {
+        return direction === 'asc' ? -1 : 1;
+      }
+      if (a[key] > b[key]) {
+        return direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+
+    setFilteredSubstances(sortedData);
+    setSortConfig({ key, direction });
+  };
   const handleApplyFilters = () => {
     if (validateDensity(minDensity, maxDensity) && validateCalorific(minCalorificValue, maxCalorificValue)) {
       setErrorMessage(''); // Сбрасываем ошибку
@@ -274,13 +294,68 @@ const SubstancesTable = () => {
             </th>
             <th>№</th>
             <th>Название</th>
-            <th>Плотность (кг/м³)</th>
-            <th>Теплота сгорания (Дж)</th>
-            <th>Минимальная концентрация (%)</th>
-            <th>Максимальная концентрация (%)</th>
+            <th onClick={() => handleSort('density')}>
+              Плотность (кг/м³)
+              {sortConfig.key === 'density' ? (
+                sortConfig.direction === 'asc' ? (
+                  <i className="fas fa-arrow-up"></i>
+                ) : (
+                  <i className="fas fa-arrow-down"></i>
+                )
+              ) : (
+                <i className="fas fa-sort"></i>
+              )}
+            </th>
+            <th onClick={() => handleSort('calorific_value')}>
+              Теплота сгорания (Дж)
+              {sortConfig.key === 'calorific_value' ? (
+                sortConfig.direction === 'asc' ? (
+                  <i className="fas fa-arrow-up"></i>
+                ) : (
+                  <i className="fas fa-arrow-down"></i>
+                )
+              ) : (
+                <i className="fas fa-sort"></i>
+              )}
+            </th>
+            <th onClick={() => handleSort('min_concentration')}>
+            Минимальная концентрация (%)
+              {sortConfig.key === 'min_concentration' ? (
+                sortConfig.direction === 'asc' ? (
+                  <i className="fas fa-arrow-up"></i>
+                ) : (
+                  <i className="fas fa-arrow-down"></i>
+                )
+              ) : (
+                <i className="fas fa-sort"></i>
+              )}
+            </th>
+            <th onClick={() => handleSort('max_concentration')}>
+            Максимальная концентрация (%)
+              {sortConfig.key === 'max_concentration' ? (
+                sortConfig.direction === 'asc' ? (
+                  <i className="fas fa-arrow-up"></i>
+                ) : (
+                  <i className="fas fa-arrow-down"></i>
+                )
+              ) : (
+                <i className="fas fa-sort"></i>
+              )}
+            </th>
             <th>Тип</th>
             <th>IP адрес</th>
-            <th>Время последнего редактирования</th>
+            <th onClick={() => handleSort('redact_time')}>
+            Время последнего редактирования
+              {sortConfig.key === 'redact_time' ? (
+                sortConfig.direction === 'asc' ? (
+                  <i className="fas fa-arrow-up"></i>
+                ) : (
+                  <i className="fas fa-arrow-down"></i>
+                )
+              ) : (
+                <i className="fas fa-sort"></i>
+              )}
+              </th>
           </tr>
         </thead>
         <tbody>
