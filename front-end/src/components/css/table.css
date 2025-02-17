@@ -227,3 +227,47 @@
   border: 1px solid #ccc;
   transition: border-color 0.3s ease;
 }
+/* Контейнер для кнопки удаления */
+.delete-button-container {
+  display: flex;
+  justify-content: flex-end; /* Выравнивание по правому краю */
+  margin-top: 20px; /* Отступ сверху */
+  margin-bottom: 20px; /* Отступ снизу */
+}
+
+/* Стили для кнопки удаления */
+.delete-button {
+  background-color: #dc3545; /* Красный цвет */
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.delete-button:hover {
+  background-color: #c82333; /* Темнее при наведении */
+}
+
+.delete-button:disabled {
+  background-color: #e0a8b0;
+  cursor: not-allowed;
+}
+/* Стили для кнопки добавления вещества */
+.add-substance-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: #007bff; /* Синий цвет */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 20px; /* Отступ снизу */
+}
+
+.add-substance-btn:hover {
+  background-color: #0056b3; /* Тёмно-синий при наведении */
+}

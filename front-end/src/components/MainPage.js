@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from 'react-bootstrap';
 import { Table, Form } from 'react-bootstrap';
 import ApiService from '../services/ApiService'; // Подключаем ApiService
 import './css/table.css'; // Подключаем стили
+import EditSubstanceModal from './EditModal';  // Импортируем компонент модального окна
+
 
 const SubstancesTable = () => {
   const [substances, setSubstances] = useState([]);
@@ -21,6 +24,10 @@ const SubstancesTable = () => {
   const [typeFilterEnabled, setTypeFilterEnabled] = useState(false); // Состояние для чекбокса типа вещества
   const [errorMessage, setErrorMessage] = useState(''); // Для ошибок
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' }); // Добавляем конфиг для сортировки
+  const [showEditModal, setShowAddModal] = useState(false); // Состояние для отображения модального окна
+  const [isFormVisible, setIsFormVisible] = useState(false); // Состояние для переключения между таблицей и формой
+  const [substanceToEdit, setSubstanceToEdit] = useState(null); // Состояние для данных вещества, которое редактируем
+
   useEffect(() => {
     const fetchSubstancesAndTypes = async () => {
       try {
@@ -54,6 +61,36 @@ const SubstancesTable = () => {
 
     filterData(query, minDensity, maxDensity, minCalorificValue, maxCalorificValue, selectedType);
   };
+  const handleDeleteSelected = async () => {
+    const selectedIds = Array.from(selectedRows); // Получаем все выбранные ID из Set
+    try {
+      const response = await ApiService.deleteSubstances(selectedIds); // Отправляем запрос на удаление
+  
+      if (response.message) {
+        // Если сервер вернул сообщение
+        alert(response.message); // Показываем сообщение в алерте
+      }
+  
+      // Обновляем состояние с удаленными веществами
+      setFilteredSubstances((prev) => prev.filter(substance => !selectedIds.includes(substance.id_Substance)));
+      setSelectedRows(new Set()); // Сбрасываем выбор
+  
+    } catch (error) {
+      console.error('Ошибка при удалении:', error);
+      alert('Произошла ошибка при удалении'); // Показываем сообщение об ошибке
+    }
+  };
+
+ // Открытие модального окна
+ const handleShowEditModal  = (substance = null) => {
+  setSubstanceToEdit(substance); // Передаем данные вещества для редактирования (если есть)
+  setIsFormVisible(true); // Открываем форму
+};
+
+// Закрытие модального окна
+const handleCloseEditModal = () => {
+  setIsFormVisible(false); // Возврат к таблице
+};
 
   // Функция для сортировки
   const handleSort = (key) => {
@@ -160,6 +197,8 @@ const SubstancesTable = () => {
 
   return (
     <div className="table-container">
+      {!isFormVisible ? (
+        <div>
       {/* Строка поиска */}
       <Form.Group controlId="search" className="mb-3 search-form">
         <Form.Control
@@ -281,7 +320,25 @@ const SubstancesTable = () => {
 
         {errorMessage && <p className="error-message">{errorMessage}</p>} {/* Ошибка фильтрации */}
       </div>
-
+{/* Кнопка для удаления выбранных */}
+{selectedRows.size > 0 && (
+ <div className="delete-button-container">
+ <Button
+   variant="danger"
+   className="delete-button"
+   onClick={handleDeleteSelected}
+   disabled={selectedRows.size === 0} // Кнопка отключена, если нет выбранных строк
+ >
+   Удалить
+ </Button>
+</div>
+)}
+      <Form.Group controlId="addSubstance" className="mb-3">
+        <button className="add-substance-btn" onClick={handleShowEditModal}>
+          Добавить вещество
+        </button>
+      </Form.Group>
+ {/* Модальное окно для добавления вещества */}
       <Table className="substances-table" striped bordered hover responsive>
         <thead>
           <tr>
@@ -356,6 +413,7 @@ const SubstancesTable = () => {
                 <i className="fas fa-sort"></i>
               )}
               </th>
+              <th>Редактировать</th>
           </tr>
         </thead>
         <tbody>
@@ -377,6 +435,14 @@ const SubstancesTable = () => {
               <td>{substance.substance_type_name}</td>
               <td>{substance.ip_address}</td>
               <td>{substance.redact_time}</td>
+              <td>
+                <Button 
+                  variant="primary" 
+                  onClick={() => handleShowEditModal(substance)}
+                >
+                  Редактировать
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -421,6 +487,10 @@ const SubstancesTable = () => {
         </div>
       </div>
     </div>
+  ) : (
+    <EditSubstanceModal show={showEditModal} handleClose={handleCloseEditModal} /> 
+      )}
+  </div>
   );
 };
 

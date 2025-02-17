@@ -1,0 +1,116 @@
+/* Стили для модального окна */
+.modal-dialog {
+    max-width: 600px; /* Устанавливаем максимальную ширину */
+  }
+  
+  /* Заголовок модального окна */
+  .modal-header {
+    background-color: #007bff;
+    color: white;
+    text-align: center; /* Центрируем заголовок */
+  }
+  
+  .modal-title {
+    font-weight: bold;
+    font-size: 20px;
+  }
+  
+  /* Основные стили для формы */
+  form {
+    padding: 20px;
+  }
+  
+  /* Формы и поля ввода */
+  .form-group {
+    margin-bottom: 10px; /* Отступ между полями формы */
+    
+  }
+  
+  .form-label {
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  /* Стили для полей ввода */
+  .form-control {
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    height: 40px; /* Устанавливаем одинаковую высоту для всех полей */
+    width: 100%; /* Задаем ширину 100% для поля */
+  }
+  
+  .form-control:focus {
+    border-color: #007bff; /* Цвет при фокусе */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+  
+    /* Стили для ошибки */
+  .text-danger {
+    font-size: 14px;
+    color: red;
+    margin-top: 10px;
+  }
+  
+  /* Стили для контейнера модального окна */
+  .modal-body {
+    padding: 20px;
+  }
+
+/* Стили для контейнера кнопок в модальном окне */
+.modal-footer {
+    padding: 10px;
+    display: flex; /* Используем flexbox для выравнивания в строку */
+    justify-content: space-between; /* Разделяем кнопки по бокам */
+    gap: 10px; /* Добавляем небольшой отступ между кнопками */
+  }
+  
+  /* Стили для кнопки "Добавить" */
+  button[type="submit"] {
+    width: 48%; /* Устанавливаем ширину кнопки */
+    padding: 10px;
+    font-size: 16px;
+    background-color: #007bff; /* Синий цвет */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button[type="submit"]:hover {
+    background-color: #0056b3; /* Темный синий при наведении */
+  }
+  
+  /* Стили для кнопки "Закрыть" */
+  .btn-secondary {
+    width: 48%; /* Устанавливаем ширину кнопки */
+    padding: 10px;
+    font-size: 16px;
+    background-color: #dc3545; /* Красный цвет */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #c82333; /* Темный красный при наведении */
+  }
+    /* Подсветка ошибок для инпутов */
+input.is-invalid,
+select.is-invalid {
+  border-color: #dc3545; /* Красный цвет для ошибок */
+}
+
+input.is-invalid:focus,
+select.is-invalid:focus {
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); /* Подсветка при фокусе */
+}
+
+/* Сообщения об ошибках */
+.form-control-feedback {
+  color: #dc3545;
+  font-size: 0.875em;
+  margin-top: 0.25rem;
+}
