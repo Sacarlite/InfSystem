@@ -4,7 +4,6 @@
 function matchRoute($uri, $routes) {
     
     foreach ($routes as $method => $routesForMethod) {
-        $a=$_SERVER['REQUEST_METHOD'];
         // Если метод текущего запроса совпадает с маршрутом
         if ($_SERVER['REQUEST_METHOD'] === $method) {
             // Проходим по маршрутам для данного метода
@@ -54,6 +53,6 @@ function handleRequest($uri, $routes) {
 
     // Если маршрут не найден
     http_response_code(404);
-    echo json_encode(['error' => 'Endpoint not found'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Конечный путь не найден'], JSON_UNESCAPED_UNICODE);
 }
 ?>

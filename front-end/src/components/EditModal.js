@@ -12,18 +12,31 @@ const EditSubstanceModal = ({ show, handleClose, substanceToEdit }) => {
   const [maxConcentration, setMaxConcentration] = useState('');
   const [substanceType, setSubstanceType] = useState('');  // Сохраняем ID типа вещества
   const [substanceTypes, setSubstanceTypes] = useState([]);
-  
+  const [newSubstanceType, setNewSubstanceType] = useState(''); // Для нового типа вещества
   const [errors, setErrors] = useState({}); // Хранение ошибок
+  const fetchSubstanceTypes = async () => {
+    try {
+      const typesData = await ApiService.getSubstanceTypes();
+      setSubstanceTypes(typesData);
+    } catch (error) {
+     alert(error);
+    }
+  };
+  const fetchAndAddSubstanceTypes = async (newType) => {
+    try {
+      // Получаем обновленный список типов веществ
+    const typesData = await ApiService.getSubstanceTypes();
+    setSubstanceTypes(typesData);
 
+    // Выбираем последний добавленный тип (после обновления списка)
+    const newType = typesData[typesData.length - 1];
+    setSubstanceType(newType.id_Substance_type);  // Выбираем новый тип вещества
+    } catch (error) {
+     alert(error);
+    }
+  };
   useEffect(() => {
-    const fetchSubstanceTypes = async () => {
-      try {
-        const typesData = await ApiService.getSubstanceTypes();
-        setSubstanceTypes(typesData);
-      } catch (error) {
-        console.error('Error fetching substance types:', error);
-      }
-    };
+   
 
     fetchSubstanceTypes();
 
@@ -34,7 +47,7 @@ const EditSubstanceModal = ({ show, handleClose, substanceToEdit }) => {
       setCalorificValue(substanceToEdit.calorific_value);
       setMinConcentration(substanceToEdit.min_concentration);
       setMaxConcentration(substanceToEdit.max_concentration);
-      setSubstanceType(substanceToEdit.substance_type_id);  // Сохраняем ID типа вещества
+      setSubstanceType(substanceToEdit.Substance_type_id_Substance_type);  // Сохраняем ID типа вещества
     } else {
       // Если добавляем новое вещество, очищаем форму
       setName('');
@@ -82,16 +95,33 @@ const EditSubstanceModal = ({ show, handleClose, substanceToEdit }) => {
       if (substanceToEdit) {
         // Редактирование
         await ApiService.updateSubstance(substanceToEdit.id_Substance, substanceData);
+        alert("Данные вещества успешно отредактированы")
       } else {
         // Добавление
         await ApiService.addSubstance(substanceData);
+        alert("Вещество успешно добавлено")
       }
       handleClose(); // Закрыть модальное окно после успешного добавления/редактирования
     } catch (error) {
-      console.error('Error adding/updating substance:', error);
+      alert(error);
     }
   };
-
+  const handleAddNewSubstanceType = () => {
+    const newType = prompt("Введите новый тип вещества:");
+    if (newType) {
+      // Создаем новый тип вещества и обновляем список типов
+      ApiService.addSubstanceType({ name: newType })
+        .then(() => {
+          alert('Тип вещества успешно добавлен');
+          fetchAndAddSubstanceTypes(newType);
+             })
+        .catch((error) => {
+          alert(error);
+        });
+      
+       
+    }
+  };
   return (
     <Modal show={true} onHide={handleClose}>
       <Modal.Header>
@@ -174,32 +204,37 @@ const EditSubstanceModal = ({ show, handleClose, substanceToEdit }) => {
             </Form.Control.Feedback>
           </Form.Group>
 
-          <Form.Group controlId="formSubstanceType">
-            <Form.Label>Тип вещества</Form.Label>
-            <Form.Control
-              as="select"
-              value={substanceType}
-              onChange={(e) => setSubstanceType(e.target.value)}
-              isInvalid={!!errors.substanceType}
-              required
-            >
-              <option value="">Выберите тип вещества</option>
-              {substanceTypes.map((type) => (
-                <option key={type.id_Substance_type} value={type.id_Substance_type}>
-                  {type.s_t_name}
-                </option>
-              ))}
-            </Form.Control>
-            <Form.Control.Feedback type="invalid">
-              {errors.substanceType}
-            </Form.Control.Feedback>
-          </Form.Group>
-          <Button variant="primary" type="submit">
-            {substanceToEdit ? 'Сохранить изменения' : 'Добавить'}
-          </Button>
+          <Form.Group controlId="formSubstanceType" className="form-group-substance-type">
+  <Form.Label>Тип вещества</Form.Label>
+  <Form.Control
+    as="select"
+    value={substanceType}
+    onChange={(e) => setSubstanceType(e.target.value)}
+    isInvalid={!!errors.substanceType}
+    required
+  >
+    <option value="">Выберите тип вещества</option>
+    {substanceTypes.map((type) => (
+      <option key={type.id_Substance_type} value={type.id_Substance_type}>
+        {type.s_t_name}
+      </option>
+    ))}
+  </Form.Control>
+  <Button className="add-new-type-btn" onClick={handleAddNewSubstanceType}>
+    <i className="fas fa-plus"></i> Добавить новый тип
+  </Button>
+  <Form.Control.Feedback type="invalid">
+    {errors.substanceType}
+  </Form.Control.Feedback>
+</Form.Group>
+
+         
         </Form>
       </Modal.Body>
       <Modal.Footer>
+      <Button variant="primary" type="submit"  onClick={handleSubmit}>
+            {substanceToEdit ? 'Сохранить изменения' : 'Добавить'}
+          </Button>
         <Button variant="secondary" onClick={handleClose}>
           Закрыть
         </Button>

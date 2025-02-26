@@ -95,7 +95,7 @@ class Substance {
 
     $stmt->execute();
         } catch (PDOException $e) {
-            throw new Exception('Error deleting substances: ' . $e->getMessage());
+            throw new Exception('Ошибка при удалении вещества: ' . $e->getMessage());
         }
     }
 }

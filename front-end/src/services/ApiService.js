@@ -21,31 +21,7 @@ class ApiService {
         const data = await response.json();
         return data;
       } catch (error) {
-        console.error('Error fetching substances:', error);
-        throw error;
-      }
-    }
-
-    // Получение вещества по ID
-    static async getSubstanceById(id) {
-      try {
-        const response = await fetch(`${this.apiUrl}/substances?id=${id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          const errorMessage = await this.extractErrorMessage(response);
-          throw new Error(errorMessage);
-        }
-
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        console.error(`Error fetching substance with ID ${id}:`, error);
-        throw error;
+         throw error;
       }
     }
 
@@ -67,7 +43,6 @@ class ApiService {
         const data = await response.json();
         return data; // Возвращаем данные типов веществ
       } catch (error) {
-        console.error('Error fetching substance types:', error);
         throw error;
       }
     }
@@ -76,7 +51,7 @@ class ApiService {
     static async extractErrorMessage(response) {
       try {
         const errorData = await response.json();
-        return errorData.error || `Server responded with status ${response.status}`;
+        return errorData.error || `Код ответа от сервера: ${response.status}`;
       } catch (e) {
         return `Failed to parse error message from server (status ${response.status})`;
       }
@@ -100,10 +75,31 @@ class ApiService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error deleting substances:', error);
       throw error;
     }
   }
+  static async addSubstanceType(substanceTypeData) {
+    try {
+      const response = await fetch(`${this.apiUrl}/substance-types/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(substanceTypeData),
+      });
+  
+      if (!response.ok) {
+        const errorMessage = await this.extractErrorMessage(response);
+        throw new Error(errorMessage);
+      }
+  
+      const data = await response.json();
+      return data; // Возвращаем данные после успешного добавления
+    } catch (error) {
+      throw error; // Прокидываем ошибку дальше
+    }
+  }
+  
   // Функция для добавления вещества
   static async addSubstance(substanceData) {
     try {
@@ -123,7 +119,28 @@ class ApiService {
       const data = await response.json();
       return data; // Возвращаем данные, если добавление прошло успешно
     } catch (error) {
-      console.error('Error adding substance:', error);
+     throw error; // Прокидываем ошибку дальше
+    }
+  }
+  // Функция для обновления вещества
+  static async updateSubstance(substanceId, substanceData) {
+    try {
+      const response = await fetch(`${this.apiUrl}/substances/update?id=${substanceId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(substanceData),
+      });
+
+      if (!response.ok) {
+        const errorMessage = await this.extractErrorMessage(response);
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      return data; // Возвращаем данные, если обновление прошло успешно
+    } catch (error) {
       throw error; // Прокидываем ошибку дальше
     }
   }

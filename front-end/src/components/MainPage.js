@@ -27,31 +27,29 @@ const SubstancesTable = () => {
   const [showEditModal, setShowAddModal] = useState(false); // Состояние для отображения модального окна
   const [isFormVisible, setIsFormVisible] = useState(false); // Состояние для переключения между таблицей и формой
   const [substanceToEdit, setSubstanceToEdit] = useState(null); // Состояние для данных вещества, которое редактируем
+  const fetchSubstancesAndTypes = async () => {
+    try {
+      // Получаем все вещества
+      const substancesData = await ApiService.getSubstances();
+      setSubstances(substancesData);
+      setFilteredSubstances(substancesData); // Изначально фильтруем все вещества
 
+      // Получаем типы веществ
+      const typesData = await ApiService.getSubstanceTypes();
+      
+      // Проверка на дубли и сохранение уникальных типов веществ
+      const uniqueTypes = typesData.filter((value, index, self) =>
+        index === self.findIndex((t) => (
+          t.id_Substance_type === value.id_Substance_type
+        ))
+      );
+
+      setSubstanceTypes(uniqueTypes); // Получаем и сохраняем уникальные типы веществ
+    } catch (error) {
+      alert(error);
+    }
+  };
   useEffect(() => {
-    const fetchSubstancesAndTypes = async () => {
-      try {
-        // Получаем все вещества
-        const substancesData = await ApiService.getSubstances();
-        setSubstances(substancesData);
-        setFilteredSubstances(substancesData); // Изначально фильтруем все вещества
-  
-        // Получаем типы веществ
-        const typesData = await ApiService.getSubstanceTypes();
-        
-        // Проверка на дубли и сохранение уникальных типов веществ
-        const uniqueTypes = typesData.filter((value, index, self) =>
-          index === self.findIndex((t) => (
-            t.id_Substance_type === value.id_Substance_type
-          ))
-        );
-  
-        setSubstanceTypes(uniqueTypes); // Получаем и сохраняем уникальные типы веществ
-      } catch (error) {
-        console.error('Error fetching substances or types:', error);
-      }
-    };
-  
     fetchSubstancesAndTypes();
   }, []);
 
@@ -63,6 +61,9 @@ const SubstancesTable = () => {
   };
   const handleDeleteSelected = async () => {
     const selectedIds = Array.from(selectedRows); // Получаем все выбранные ID из Set
+    const confirmation = window.confirm(`Вы уверены, что хотите удалить эти вещества под номерами "${selectedIds}"? Это действие нельзя будет отменить.`);
+  
+  if (confirmation) {
     try {
       const response = await ApiService.deleteSubstances(selectedIds); // Отправляем запрос на удаление
   
@@ -72,24 +73,28 @@ const SubstancesTable = () => {
       }
   
       // Обновляем состояние с удаленными веществами
-      setFilteredSubstances((prev) => prev.filter(substance => !selectedIds.includes(substance.id_Substance)));
       setSelectedRows(new Set()); // Сбрасываем выбор
-  
+      fetchSubstancesAndTypes();
     } catch (error) {
       console.error('Ошибка при удалении:', error);
       alert('Произошла ошибка при удалении'); // Показываем сообщение об ошибке
     }
+  }
   };
 
  // Открытие модального окна
- const handleShowEditModal  = (substance = null) => {
+ const handleShowEditModal  = (substance) => {
   setSubstanceToEdit(substance); // Передаем данные вещества для редактирования (если есть)
   setIsFormVisible(true); // Открываем форму
 };
-
+const handleShowAddModal  = () => {
+  setSubstanceToEdit(null); // Передаем данные вещества для редактирования (если есть)
+  setIsFormVisible(true); // Открываем форму
+};
 // Закрытие модального окна
 const handleCloseEditModal = () => {
   setIsFormVisible(false); // Возврат к таблице
+  fetchSubstancesAndTypes();
 };
 
   // Функция для сортировки
@@ -113,12 +118,15 @@ const handleCloseEditModal = () => {
     setSortConfig({ key, direction });
   };
   const handleApplyFilters = () => {
+    if(!filterEnabled&&!calorificFilterEnabled&&!typeFilterEnabled){
+      fetchSubstancesAndTypes();
+    }else{
     if (validateDensity(minDensity, maxDensity) && validateCalorific(minCalorificValue, maxCalorificValue)) {
       setErrorMessage(''); // Сбрасываем ошибку
       filterData(searchQuery, minDensity, maxDensity, minCalorificValue, maxCalorificValue, selectedType);
     } else {
       setErrorMessage('Проверьте правильность введенных данных.');
-    }
+    }}
   };
 
   const validateDensity = (min, max) => {
@@ -140,23 +148,27 @@ const handleCloseEditModal = () => {
       substance.name.toLowerCase().includes(query)
     );
 
-    // Фильтрация по плотности
-    if (minDensity !== '' && !isNaN(minDensity)) {
-      filtered = filtered.filter((substance) => substance.density >= parseFloat(minDensity));
-    }
-    if (maxDensity !== '' && !isNaN(maxDensity)) {
-      filtered = filtered.filter((substance) => substance.density <= parseFloat(maxDensity));
-    }
-
-    // Фильтрация по теплоте сгорания
-    if (minCalorificValue !== '' && !isNaN(minCalorificValue)) {
-      filtered = filtered.filter((substance) => substance.calorific_value >= parseFloat(minCalorificValue));
-    }
-    if (maxCalorificValue !== '' && !isNaN(maxCalorificValue)) {
-      filtered = filtered.filter((substance) => substance.calorific_value <= parseFloat(maxCalorificValue));
+    // Фильтрация по плотности, если фильтр по плотности активирован
+    if (filterEnabled) {
+      if (minDensity !== '' && !isNaN(minDensity)) {
+        filtered = filtered.filter((substance) => substance.density >= parseFloat(minDensity));
+      }
+      if (maxDensity !== '' && !isNaN(maxDensity)) {
+        filtered = filtered.filter((substance) => substance.density <= parseFloat(maxDensity));
+      }
     }
 
-    // Фильтрация по типу вещества
+    // Фильтрация по теплоте сгорания, если фильтр по калорийности активирован
+    if (calorificFilterEnabled) {
+      if (minCalorificValue !== '' && !isNaN(minCalorificValue)) {
+        filtered = filtered.filter((substance) => substance.calorific_value >= parseFloat(minCalorificValue));
+      }
+      if (maxCalorificValue !== '' && !isNaN(maxCalorificValue)) {
+        filtered = filtered.filter((substance) => substance.calorific_value <= parseFloat(maxCalorificValue));
+      }
+    }
+
+    // Фильтрация по типу вещества, если фильтр по типу вещества активирован
     if (typeFilterEnabled && selectedType) {
       filtered = filtered.filter((substance) => substance.substance_type_name === selectedType);
     }
@@ -215,7 +227,7 @@ const handleCloseEditModal = () => {
       <Form.Group controlId="filterEnabled" className="mb-3">
         <Form.Check
           type="checkbox"
-          label="Активировать фильтр по плотности"
+          label="Активировать фильтр по плотности, кг/м³"
           checked={filterEnabled}
           onChange={(e) => setFilterEnabled(e.target.checked)}
         />
@@ -225,7 +237,7 @@ const handleCloseEditModal = () => {
       <Form.Group controlId="calorificFilterEnabled" className="mb-3">
         <Form.Check
           type="checkbox"
-          label="Активировать фильтр по теплоте сгорания"
+          label="Активировать фильтр по теплоте сгорания, Дж"
           checked={calorificFilterEnabled}
           onChange={(e) => setCalorificFilterEnabled(e.target.checked)}
         />
@@ -246,7 +258,7 @@ const handleCloseEditModal = () => {
         {filterEnabled && (
           <div className="density-filters">
             <Form.Group controlId="minDensity" className="mb-3">
-              <Form.Label>Минимальная плотность</Form.Label>
+              <Form.Label>Минимальная плотность </Form.Label>
               <Form.Control
                 type="number"
                 value={minDensity}
@@ -256,7 +268,7 @@ const handleCloseEditModal = () => {
             </Form.Group>
 
             <Form.Group controlId="maxDensity" className="mb-3">
-              <Form.Label>Максимальная плотность</Form.Label>
+              <Form.Label>Максимальная плотность </Form.Label>
               <Form.Control
                 type="number"
                 value={maxDensity}
@@ -271,7 +283,7 @@ const handleCloseEditModal = () => {
         {calorificFilterEnabled && (
           <div className="calorific-filters">
             <Form.Group controlId="minCalorificValue" className="mb-3">
-              <Form.Label>Минимальная теплота сгорания</Form.Label>
+              <Form.Label>Минимальная теплота сгорания </Form.Label>
               <Form.Control
                 type="number"
                 value={minCalorificValue}
@@ -281,7 +293,7 @@ const handleCloseEditModal = () => {
             </Form.Group>
 
             <Form.Group controlId="maxCalorificValue" className="mb-3">
-              <Form.Label>Максимальная теплота сгорания</Form.Label>
+              <Form.Label>Максимальная теплота сгорания </Form.Label>
               <Form.Control
                 type="number"
                 value={maxCalorificValue}
@@ -296,7 +308,7 @@ const handleCloseEditModal = () => {
         {typeFilterEnabled && (
           <div className="type-filter">
             <Form.Group controlId="substanceType" className="mb-3">
-              <Form.Label>Тип вещества</Form.Label>
+              <Form.Label>Тип вещества </Form.Label>
               <Form.Control
                 as="select"
                 value={selectedType}
@@ -334,7 +346,7 @@ const handleCloseEditModal = () => {
 </div>
 )}
       <Form.Group controlId="addSubstance" className="mb-3">
-        <button className="add-substance-btn" onClick={handleShowEditModal}>
+        <button className="add-substance-btn" onClick={handleShowAddModal}>
           Добавить вещество
         </button>
       </Form.Group>
@@ -350,7 +362,18 @@ const handleCloseEditModal = () => {
               />
             </th>
             <th>№</th>
-            <th>Название</th>
+            <th onClick={() => handleSort('name')}>
+            Название
+              {sortConfig.key === 'name' ? (
+                sortConfig.direction === 'asc' ? (
+                  <i className="fas fa-arrow-down"></i>
+                ) : (
+                  <i className="fas fa-arrow-up"></i>
+                )
+              ) : (
+                <i className="fas fa-sort"></i>
+              )}
+            </th>
             <th onClick={() => handleSort('density')}>
               Плотность (кг/м³)
               {sortConfig.key === 'density' ? (
@@ -399,8 +422,31 @@ const handleCloseEditModal = () => {
                 <i className="fas fa-sort"></i>
               )}
             </th>
-            <th>Тип</th>
-            <th>IP адрес</th>
+            <th onClick={() => handleSort('substance_type_name')}>
+            Тип
+              {sortConfig.key === 'substance_type_name' ? (
+                sortConfig.direction === 'asc' ? (
+                  <i className="fas fa-arrow-down"></i>
+                ) : (
+                  <i className="fas fa-arrow-up"></i>
+                )
+              ) : (
+                <i className="fas fa-sort"></i>
+              )}
+            </th>
+           
+            <th onClick={() => handleSort('ip_address')}>
+            IP адрес
+              {sortConfig.key === 'ip_address' ? (
+                sortConfig.direction === 'asc' ? (
+                  <i className="fas fa-arrow-up"></i>
+                ) : (
+                  <i className="fas fa-arrow-down"></i>
+                )
+              ) : (
+                <i className="fas fa-sort"></i>
+              )}
+              </th>
             <th onClick={() => handleSort('redact_time')}>
             Время последнего редактирования
               {sortConfig.key === 'redact_time' ? (
@@ -434,14 +480,21 @@ const handleCloseEditModal = () => {
               <td>{substance.max_concentration}</td>
               <td>{substance.substance_type_name}</td>
               <td>{substance.ip_address}</td>
-              <td>{substance.redact_time}</td>
+              <td>{new Date(substance.redact_time).toLocaleString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false 
+                })}</td>
               <td>
-                <Button 
-                  variant="primary" 
-                  onClick={() => handleShowEditModal(substance)}
-                >
-                  Редактировать
-                </Button>
+              <Button 
+  variant="link" 
+  onClick={() => handleShowEditModal(substance)} 
+  style={{ padding: 0, fontSize: '20px', color: '#007bff' }}>
+  <i className="fas fa-pencil-alt"></i> {/* Иконка карандашика */}
+</Button>
               </td>
             </tr>
           ))}
@@ -488,7 +541,7 @@ const handleCloseEditModal = () => {
       </div>
     </div>
   ) : (
-    <EditSubstanceModal show={showEditModal} handleClose={handleCloseEditModal} /> 
+    <EditSubstanceModal show={showEditModal} handleClose={handleCloseEditModal}  substanceToEdit={substanceToEdit}/> 
       )}
   </div>
   );

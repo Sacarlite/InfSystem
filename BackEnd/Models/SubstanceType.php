@@ -89,7 +89,7 @@ class SubstanceType {
             $stmt = $pdo->prepare("DELETE FROM `Substance_type` WHERE `id_Substance_type` IN ($inQuery)");
             $stmt->execute($ids);
         } catch (PDOException $e) {
-            throw new Exception('Error deleting substances: ' . $e->getMessage());
+            throw new Exception('Ошибка при удалении типов вещества: ' . $e->getMessage());
         }
     }
 }
